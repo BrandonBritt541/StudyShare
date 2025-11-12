@@ -625,15 +625,232 @@ For issues and questions:
 - GitHub Issues: [StudyShare Issues](https://github.com/BrandonBritt541/StudyShare/issues)
 - Email: support@studyshare.dev
 
+## 📦 Module 3: Listings, Search & Notify-Me Bell
+
+### New Features
+
+- **Create & Manage Listings** - Sellers can create listings with images, price, condition, and optional course info
+- **Browse with Search** - Full-text search on listing titles
+- **Listings Grid** - Cards showing image, price, quality, type, seller info
+- **Listing Detail Page** - Full view with image gallery, all metadata, seller info, and contact buttons
+- **Notify-Me Alerts** - Subscribe to searches, get notified for 14 days when new listings match
+- **Notifications Page** - View all notifications, mark as read, navigate to listings
+- **Notification Bell** - Header icon with unread count, polls every 30 seconds
+
+### Key Implementation Details
+
+**Listings CRUD:**
+- Create: `POST /api/listings/create` (server action)
+- Read: `GET /api/listings/search` with filters
+- Update: `PATCH /api/listings/:id` (seller only)
+- Delete: `DELETE /api/listings/:id` (seller only)
+
+**Image Upload:**
+- Client-side compression using Canvas API
+- Max 6 images per listing, ≤5MB each
+- Supports JPG, PNG, WEBP
+- Automatic scaling to 1200x1200px, 0.8 JPEG quality
+
+**Search & Filters:**
+- Full-text search on title
+- Filter by: type, quality, major, course code, professor, price range
+- Sort by: newest, relevance, price_asc, price_desc
+- Pagination: 12 listings per page
+
+**Alert System:**
+- 14-day subscription window
+- Matches on title contains query (case-insensitive)
+- SQL trigger fires on new listing insert
+- Auto-creates notifications for all matching alerts
+
+**RLS Policies:**
+- Users can only see listings from their school
+- Users can only create listings for their school
+- Users can only edit/delete their own listings
+
+### Supabase Storage Setup
+
+**Create listing-images bucket in Supabase Dashboard:**
+
+1. Go to Supabase Dashboard → Your Project → Storage
+2. Click "Create a new bucket"
+3. Name: `listing-images`
+4. Privacy: **Public**
+5. Click "Create bucket"
+6. Go to "Policies" tab in the bucket
+7. Add policy:
+   ```sql
+   CREATE POLICY "Users can upload their own listing images"
+   ON storage.objects FOR INSERT
+   WITH CHECK (
+     auth.uid() = owner AND
+     bucket_id = 'listing-images' AND
+     (storage.foldername(name))[1] = auth.uid()::text
+   );
+
+   CREATE POLICY "Anyone can view listing images"
+   ON storage.objects FOR SELECT
+   USING (bucket_id = 'listing-images');
+
+   CREATE POLICY "Users can delete their own listing images"
+   ON storage.objects FOR DELETE
+   USING (
+     auth.uid() = owner AND
+     bucket_id = 'listing-images'
+   );
+   ```
+
+---
+
+## 🧪 Module 3 Testing Checklist
+
+### Test Creating Listings
+
+- [ ] Login with .edu email
+- [ ] Navigate to `/listings/new`
+- [ ] Fill in listing form:
+  - Title: "Physics Textbook"
+  - Description: "Used for Physics 101"
+  - Type: "textbook"
+  - Quality: "good"
+  - Price: "45.99"
+  - Course Code: "PHYS 101"
+  - Professor: "Dr. Smith"
+  - Major: "Physics"
+- [ ] Upload 2-3 images (JPG/PNG/WEBP)
+- [ ] Click "Create Listing"
+- [ ] **Verify:** Redirected to `/listings`, listing appears in grid
+- [ ] Click on the listing card
+- [ ] **Verify:** Redirected to `/listings/[id]`, all details visible
+
+### Test Listing Detail Page
+
+- [ ] Navigate to any listing detail page
+- [ ] **Verify:** Image gallery shows with thumbnail navigation
+- [ ] Click on different thumbnail images
+- [ ] **Verify:** Main image updates
+- [ ] **Verify:** All metadata displayed:
+  - Title, price, condition, type, course code
+  - Description (if provided)
+  - Course title, professor, major (if provided)
+  - Posted time
+- [ ] **Verify:** Seller card shows:
+  - Seller name with initial avatar
+  - College year
+  - Major
+  - Referral code
+- [ ] Click "Message Seller" button
+- [ ] **Verify:** Alert shows "Messaging feature coming soon!"
+- [ ] Click "Back to Listings"
+- [ ] **Verify:** Returns to browse page
+
+### Test Search & Notify-Me
+
+- [ ] Go to `/listings`
+- [ ] Search for "textbook"
+- [ ] **Verify:** Results show only textbook listings
+- [ ] Search for "nonexistent item xyz"
+- [ ] **Verify:** No results shown, "Notify Me" button appears
+- [ ] Click "Notify Me"
+- [ ] **Verify:** Alert shows "Subscribed! You'll be notified when someone lists 'nonexistent item xyz'"
+- [ ] Go to `/profile/alerts`
+- [ ] **Verify:** Alert appears with:
+  - Query text: "nonexistent item xyz"
+  - Days remaining: ~14
+  - Progress bar showing 100% (14/14 days)
+- [ ] Search for another nonexistent item
+- [ ] Create Notify-Me alert
+- [ ] **Verify:** Second alert appears in list
+- [ ] Delete one alert by clicking "Delete"
+- [ ] **Verify:** Alert removed from list
+
+### Test Notifications & Alert Matching
+
+- [ ] Create a Notify-Me alert for "Python textbook"
+- [ ] Go to `/listings/new`
+- [ ] Create a listing with title "Python textbook for sale"
+- [ ] Submit listing
+- [ ] Go to `/notifications`
+- [ ] **Verify:** Notification appears with:
+  - 🔔 icon
+  - Message: "New listing matches your alert: Python textbook for sale"
+  - "View Listing" button
+- [ ] Click "View Listing"
+- [ ] **Verify:** Navigates to the listing detail page
+- [ ] Go back to `/notifications`
+- [ ] **Verify:** Notification still shows with "Mark Read" button
+- [ ] Click "Mark Read"
+- [ ] **Verify:** Notification changes color (no longer highlighted)
+- [ ] Click notification bell in header
+- [ ] **Verify:** Unread count decreases by 1
+- [ ] **Verify:** Navigates to `/notifications` page
+
+### Test Notification Bell
+
+- [ ] Create 3 Notify-Me alerts
+- [ ] Go to `/listings/new`
+- [ ] Create 3 listings that match the alerts
+- [ ] Go to header
+- [ ] **Verify:** Bell icon shows "3" badge
+- [ ] Click bell
+- [ ] **Verify:** Navigates to `/notifications`
+- [ ] **Verify:** 3 unread notifications displayed
+- [ ] Click "Mark All as Read"
+- [ ] Go back to header
+- [ ] **Verify:** Bell icon shows no badge (or 0)
+
+### Test Filtering & Sorting
+
+- [ ] Go to `/listings`
+- [ ] Create multiple listings with different:
+  - Types: textbook, notes, supplies
+  - Quality: new, like_new, good, fair
+  - Prices: $10, $25, $50, $100
+  - Majors: CS, Physics, Biology
+- [ ] Search for a common word in titles (e.g., "book")
+- [ ] **Verify:** Only listings with that word appear
+- [ ] Sort by "Price: Low to High"
+- [ ] **Verify:** Listings ordered by price ascending
+- [ ] Sort by "Price: High to Low"
+- [ ] **Verify:** Listings ordered by price descending
+- [ ] Sort by "Newest"
+- [ ] **Verify:** Most recently created listings first
+
+### Test RLS & School Isolation
+
+- [ ] Create account with @calpoly.edu email
+- [ ] Create a listing
+- [ ] Note the listing ID
+- [ ] **Verify:** Can see the listing on browse page
+- [ ] Create a second account with different domain (e.g., @berkeley.edu if available, or use different school)
+- [ ] **Verify:** Cannot see the Cal Poly listing on browse page
+- [ ] Try accessing listing directly via URL: `/listings/[cal-poly-listing-id]`
+- [ ] **Verify:** "Listing not found" error or no access
+
+### Test Error Handling
+
+- [ ] Upload image >5MB
+- [ ] **Verify:** Error message shown
+- [ ] Upload non-image file
+- [ ] **Verify:** Error message shown
+- [ ] Create listing without title
+- [ ] **Verify:** Form validation error
+- [ ] Create listing with price -$10
+- [ ] **Verify:** Validation error
+- [ ] Search for very long string (500+ chars)
+- [ ] **Verify:** Graceful handling, no crash
+
+---
+
 ## 🗺️ MVP Checklist
 
-- [ ] Email/password signup (only .edu emails accepted)
-- [ ] School auto-mapped via domain
-- [ ] User profile with Major and College Year
-- [ ] Create, search, view listings
+- [x] Email/password signup (only .edu emails accepted)
+- [x] School auto-mapped via domain
+- [x] User profile with Major and College Year
+- [x] Create, search, view listings (Module 3)
 - [ ] In-app messaging between buyer and seller
-- [ ] Notify-Me bell (14-day expiry, in-app notifications)
+- [x] Notify-Me bell (14-day expiry, in-app notifications) (Module 3)
 - [ ] Referral codes (auto-generate, points increment)
 - [ ] Schedule image uploads
-- [ ] All content scoped to user's school
-- [ ] CI/CD + Supabase migrations functional
+- [x] All content scoped to user's school
+- [x] CI/CD + Supabase migrations functional

@@ -26,7 +26,12 @@ RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO notifications (user_id, type, payload)
   SELECT a.user_id, 'alert_match',
-         JSONB_BUILD_OBJECT('listing_id', NEW.id, 'title', NEW.title, 'price_cents', NEW.price_cents)
+         JSONB_BUILD_OBJECT(
+           'listing_id', NEW.id,
+           'title', NEW.title,
+           'price_cents', NEW.price_cents,
+           'message', 'New listing matches your alert: ' || NEW.title
+         )
   FROM alerts a
   WHERE a.school_id = NEW.school_id
     AND a.expires_at > NOW()

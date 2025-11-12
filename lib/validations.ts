@@ -26,27 +26,25 @@ export const profileSchema = z.object({
 
 // Listing Schemas
 export const listingSchema = z.object({
-  title: z.string().min(5).max(200),
+  title: z.string().min(5, 'Title must be at least 5 characters').max(200),
   description: z.string().max(2000).optional(),
-  type: z.enum(['textbook', 'lab_supplies', 'calculator', 'electronics', 'notebook', 'other']),
-  quality: z.enum(['new', 'like_new', 'good', 'fair']),
-  priceCents: z.number().int().min(0),
+  type: z.enum(['textbook', 'lab_supplies', 'calculator', 'electronics', 'notebook', 'other'], {
+    errorMap: () => ({ message: 'Invalid item type' }),
+  }),
+  quality: z.enum(['new', 'like_new', 'good', 'fair'], {
+    errorMap: () => ({ message: 'Invalid condition' }),
+  }),
+  priceCents: z.number().int().min(0, 'Price must be 0 or more'),
   courseCode: z.string().max(20).optional(),
   courseTitle: z.string().max(100).optional(),
   professor: z.string().max(100).optional(),
   major: z.string().max(100).optional(),
-  images: z.array(z.string()).max(6),
-});
-
-// Message Schemas
-export const messageSchema = z.object({
-  body: z.string().min(1).max(5000),
+  imageUrls: z.array(z.string().url()).min(1, 'At least 1 image is required').max(6, 'Maximum 6 images allowed'),
 });
 
 // Alert Schemas
 export const alertSchema = z.object({
-  queryText: z.string().min(1).max(200),
-  expiresAt: z.date(),
+  queryText: z.string().min(1, 'Search term required').max(200),
 });
 
 // Referral Schemas
@@ -70,3 +68,19 @@ export type MessageInput = z.infer<typeof messageSchema>;
 export type AlertInput = z.infer<typeof alertSchema>;
 export type ReferralInput = z.infer<typeof referralSchema>;
 export type ReportInput = z.infer<typeof reportSchema>;
+
+// Filter Schemas for Search
+export const listingFiltersSchema = z.object({
+  types: z.array(z.enum(['textbook', 'lab_supplies', 'calculator', 'electronics', 'notebook', 'other'])).optional(),
+  major: z.string().optional(),
+  courseCode: z.string().optional(),
+  professor: z.string().optional(),
+  qualities: z.array(z.enum(['new', 'like_new', 'good', 'fair'])).optional(),
+  priceMin: z.number().min(0).optional(),
+  priceMax: z.number().min(0).optional(),
+  sortBy: z.enum(['relevance', 'newest', 'price_asc', 'price_desc']).default('newest'),
+  page: z.number().min(1).default(1),
+  search: z.string().optional(),
+});
+
+export type ListingFilters = z.infer<typeof listingFiltersSchema>;
