@@ -842,13 +842,205 @@ For issues and questions:
 
 ---
 
+## 💬 Module 4: Messaging System
+
+### New Features
+
+- **Message Threads** - One unique thread per buyer-listing pair, reuses existing thread
+- **Inbox Page** (`/messages`) - Lists all threads sorted by most recent message
+- **Thread Detail Page** (`/messages/[threadId]`) - Real-time chat with message history
+- **Message Composer** - Text input with quick replies and multiline support
+- **Unread Badges** - Shows unread message count on each thread and in header bell
+- **Profanity Filter** - Auto-redacts profanity words (doesn't block messages)
+- **Reporting** - Report users or messages from the thread menu
+- **Real-time Updates** - Messages append in real-time via Supabase subscriptions
+- **Message Bell** - Header icon showing total unread message count with polling
+
+### Key Implementation Details
+
+**Thread Model:**
+- One thread per buyer-listing pair (unique constraint on buyer_id, listing_id)
+- Reuses existing thread if buyer messages the same listing again
+- Tracks last_message_at via trigger on message insert
+
+**Message Composer:**
+- Multiline text input with Shift+Enter for new lines, Enter to send
+- Quick reply buttons: "Is this still available?", "Can you meet on campus?", etc.
+- Info text: "Phone numbers, emails, and payment info are OK to share in chat"
+
+**Profanity Filter:**
+- Server-side word redaction (replaces with asterisks)
+- Does NOT block messages, just sanitizes them
+- Allows phone/email sharing
+
+**RLS Policies:**
+- Users can only read/write messages in threads they're part of
+- Prevents unauthorized access to other threads
+- School isolation is enforced through user's school_id
+
+**Unread Tracking:**
+- Messages marked is_read=false on insert
+- Mark thread as read when user opens thread
+- Aggregate unread count from unread messages from other participants
+
+**Realtime:**
+- Supabase Realtime subscription on messages table filtered by thread_id
+- Messages append to chat in real-time as they're received
+- Scroll to bottom on new message arrival
+
+**Notifications:**
+- New notification created (type='new_message') when message is sent
+- Includes sender name, thread ID, listing ID, message preview
+- Notification bell polls every 20 seconds for unread message count
+
+### Server Actions
+
+- `createOrGetThread(listingId, sellerId)` - Create or reuse thread, validate permissions
+- `sendMessage(threadId, body)` - Send message, apply profanity filter, create notification
+- `getMessages(threadId)` - Get all messages in thread with sender profile
+- `getThreads()` - Get inbox threads with unread count per thread
+- `markThreadAsRead(threadId)` - Mark other participant's messages as read
+- `getUnreadMessageCount()` - Get total unread count across all threads
+- `reportMessage(messageId, reason)` - Create message report
+- `reportUser(userId, reason)` - Create user report
+
+---
+
+## 🧪 Module 4 Testing Checklist: Messaging System
+
+### Test Setup (Two Users)
+
+First, set up two test users in different browsers:
+
+**User A (Seller):**
+- Create account with email like `seller@calpoly.edu`
+- Complete profile setup
+- Create a test listing (e.g., "Physics Textbook - $30")
+
+**User B (Buyer):**
+- Create account with email like `buyer@calpoly.edu`
+- Complete profile setup
+- Keep this browser tab open
+
+### Test Message Thread Creation
+
+- [ ] User B navigates to User A's listing
+- [ ] User B clicks "Message Seller"
+- [ ] **Verify:** Redirected to `/messages/[threadId]` with message composer
+- [ ] User B types first message: "Hi, is this still available?"
+- [ ] User B clicks "Send"
+- [ ] **Verify:** Message appears immediately in chat
+- [ ] User B clicks quick reply "Can you meet on campus?"
+- [ ] **Verify:** Sends message without manual typing
+- [ ] User B refreshes the page
+- [ ] **Verify:** Messages persist, chat history visible
+
+### Test Inbox and Thread List
+
+- [ ] User A switches to their browser
+- [ ] User A navigates to `/messages`
+- [ ] **Verify:** Thread from User B appears at top with:
+  - Listing thumbnail from the item
+  - Listing title
+  - "buyer@calpoly.edu" name or "Buyer" label
+  - Last message preview: "Hi, is this still available?"
+  - Unread badge showing "2" (two unread messages)
+- [ ] User A clicks on the thread
+- [ ] **Verify:** Opens conversation view with all 2 messages from User B
+- [ ] **Verify:** Unread badge disappears after viewing
+- [ ] User A types reply: "Yes, still available. Meet tomorrow?"
+- [ ] User A sends message
+- [ ] Switch to User B's browser (keep open from before)
+- [ ] **Verify:** New message appears in real-time without refresh
+- [ ] User B's unread badge increments (now 1 unread message from User A)
+
+### Test Unread Message Badge in Header
+
+- [ ] User B at `/messages` page, unread badge shows "1"
+- [ ] User B clicks message bell in header (should navigate to /messages)
+- [ ] **Verify:** Bell shows "1" badge
+- [ ] User B opens the thread with User A
+- [ ] **Verify:** Badge disappears when thread is marked as read
+- [ ] Return to User A's browser
+- [ ] User A sends 3 new messages quickly
+- [ ] **Verify:** User B's bell shows "3" badge
+- [ ] Wait ~20 seconds (polling interval)
+- [ ] **Verify:** Bell updates with correct count
+
+### Test Profanity Filtering
+
+- [ ] User B sends message with profanity: "This textbook is shit quality"
+- [ ] Message sends successfully (no block)
+- [ ] **Verify:** User A sees redacted version: "This textbook is *** quality"
+- [ ] User A sends: "What the hell?"
+- [ ] **Verify:** User B sees: "What the ****?"
+
+### Test Quick Replies
+
+- [ ] User A types nothing and clicks quick reply: "Is this still available?"
+- [ ] **Verify:** Message appears immediately
+- [ ] Click another quick reply: "What condition is it in?"
+- [ ] **Verify:** Sends without manual typing
+- [ ] Verify quick replies disappear after first real message is sent
+
+### Test Report Functionality
+
+- [ ] User B opens thread with User A
+- [ ] User B clicks "⋮ More" button in header
+- [ ] **Verify:** Menu shows "Report user..." and "Report message..."
+- [ ] Click "Report user..."
+- [ ] Type reason: "Unresponsive seller"
+- [ ] Click "Submit Report"
+- [ ] **Verify:** Alert shows "Report submitted. Our team will review it shortly."
+- [ ] Go to Supabase dashboard → SQL Editor
+- [ ] Run: `SELECT * FROM reports WHERE target_type='user';`
+- [ ] **Verify:** Row exists with reporter_id, target_id, reason
+
+### Test Thread Reuse
+
+- [ ] User B navigates back to the same listing
+- [ ] User B clicks "Message Seller" again
+- [ ] **Verify:** Same thread opens (URL is the same)
+- [ ] **Verify:** Message history still visible
+- [ ] User B sends new message: "Are you still selling?"
+- [ ] **Verify:** Appends to same thread, doesn't create duplicate
+
+### Test Thread Isolation & RLS
+
+- [ ] User C creates third account at same school
+- [ ] User C tries to access User A↔User B thread directly: `/messages/[threadId-from-A-and-B]`
+- [ ] **Verify:** Gets error or "Thread not found" (RLS blocks access)
+- [ ] Check network tab: Query returns 0 results due to RLS policy
+
+### Test Error Handling
+
+- [ ] User B sends empty message (just spaces)
+- [ ] **Verify:** Error shows "Message cannot be empty"
+- [ ] User B sends 5100 characters (over limit)
+- [ ] **Verify:** Error shows "Message too long (max 5000 characters)"
+- [ ] Close browser and reopen in private window
+- [ ] Try accessing `/messages/[threadId]` without logging in
+- [ ] **Verify:** Redirected to login page
+- [ ] Login and try again
+- [ ] **Verify:** Can access thread if user is participant
+
+### Test Mobile/UX
+
+- [ ] Open thread on mobile (use browser dev tools → Toggle device toolbar)
+- [ ] **Verify:** Composer sticks to bottom
+- [ ] Verify message bubbles don't overflow screen width
+- [ ] **Verify:** Quick replies wrap properly on small screens
+- [ ] Verify timestamps are readable
+
+---
+
 ## 🗺️ MVP Checklist
 
 - [x] Email/password signup (only .edu emails accepted)
 - [x] School auto-mapped via domain
 - [x] User profile with Major and College Year
 - [x] Create, search, view listings (Module 3)
-- [ ] In-app messaging between buyer and seller
+- [x] In-app messaging between buyer and seller (Module 4)
 - [x] Notify-Me bell (14-day expiry, in-app notifications) (Module 3)
 - [ ] Referral codes (auto-generate, points increment)
 - [ ] Schedule image uploads

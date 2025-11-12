@@ -4,9 +4,12 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getListing } from '@/server/actions/listings';
+import { createOrGetThread } from '@/server/actions/messaging';
+import { useSession } from '@/lib/session-context';
 
 interface ListingData {
   id: string;
+  seller_id: string;
   title: string;
   description?: string;
   type: string;
@@ -29,10 +32,12 @@ interface ListingData {
 
 export default function ListingDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const { user } = useSession();
   const [listing, setListing] = useState<ListingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isMessaging, setIsMessaging] = useState(false);
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -96,6 +101,28 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   };
 
   const images = listing.images && listing.images.length > 0 ? listing.images : ['/placeholder-image.png'];
+
+  const handleMessageSeller = async () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (user.id === listing?.seller_id) {
+      alert('You cannot message yourself');
+      return;
+    }
+
+    setIsMessaging(true);
+    const result = await createOrGetThread(listing?.id || '', listing?.seller_id || '');
+    setIsMessaging(false);
+
+    if (result.error) {
+      alert(result.error);
+    } else if (result.data) {
+      router.push(`/messages/${result.data.id}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -269,10 +296,11 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
               {/* Action Buttons */}
               <div className="space-y-3">
                 <button
-                  onClick={() => alert('Messaging feature coming soon!')}
-                  className="w-full rounded-lg bg-primary-600 py-3 font-semibold text-white hover:bg-primary-700 transition-colors"
+                  onClick={handleMessageSeller}
+                  disabled={isMessaging || user?.id === listing?.seller_id}
+                  className="w-full rounded-lg bg-primary-600 py-3 font-semibold text-white hover:bg-primary-700 disabled:opacity-50 transition-colors"
                 >
-                  Message Seller
+                  {isMessaging ? 'Opening chat...' : user?.id === listing?.seller_id ? 'You own this listing' : 'Message Seller'}
                 </button>
                 <button
                   onClick={() => alert('Contact admin for reports')}

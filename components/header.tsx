@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useSession } from '@/lib/session-context';
 import { NotificationBell } from './notifications/notification-bell';
+import { MessageBell } from './messaging/message-bell';
 
 export function Header() {
   const { user, isLoading } = useSession();
@@ -26,6 +27,7 @@ export function Header() {
               <Link href="/profile" className="text-gray-700 hover:text-primary-600 font-medium">
                 Profile
               </Link>
+              <MessageBell />
               <NotificationBell />
             </>
           ) : (
