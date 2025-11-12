@@ -12,7 +12,6 @@ interface CourseTableProps {
 
 export function CourseTable({ courses, onEdit, onDelete }: CourseTableProps) {
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDeleteComplete = () => {
     setSelectedCourse(null);
@@ -125,7 +124,7 @@ export function CourseTable({ courses, onEdit, onDelete }: CourseTableProps) {
         <CourseDeleteModal
           courseId={selectedCourse}
           isOpen={selectedCourse !== null}
-          isLoading={isDeleting}
+          isLoading={false}
           onCancel={() => setSelectedCourse(null)}
           onComplete={() => handleDeleteComplete()}
         />
