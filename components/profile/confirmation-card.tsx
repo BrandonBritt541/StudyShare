@@ -48,8 +48,10 @@ export function ConfirmationCard({ userId }: ConfirmationCardProps) {
 
         // Fetch school
         const schoolResult = await getUserSchool(userId);
-        if (!schoolResult.error) {
-          setSchool(schoolResult.data);
+        if (!schoolResult.error && schoolResult.data && Array.isArray(schoolResult.data)) {
+          setSchool(schoolResult.data[0] || null);
+        } else if (!schoolResult.error) {
+          setSchool(schoolResult.data as SchoolData | null);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load profile');

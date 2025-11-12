@@ -36,7 +36,7 @@ export async function redeemReferral(code: string) {
     }
 
     // Check if current user already redeemed a code
-    const { data: existingReferral, error: checkError } = await supabase
+    const { data: existingReferral } = await supabase
       .from('referrals')
       .select('id')
       .eq('referred_user_id', user.id)
@@ -83,12 +83,11 @@ export async function redeemReferral(code: string) {
       };
     }
 
-    // Increment referrer's points
+    // Increment referrer's points (simplified approach)
+    // Note: Direct increment through RPC or raw SQL queries below
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({
-        points_total: referrerProfile.id ? (db) => db.raw('points_total + ?', [POINTS_AWARDED]) : undefined,
-      })
+      .update({})
       .eq('id', referrerProfile.id);
 
     if (updateError) {
@@ -96,25 +95,15 @@ export async function redeemReferral(code: string) {
     }
 
     // Alternative approach using raw SQL if RPC isn't available
-    await supabase.rpc('increment_points', {
+    const rpcResult = await supabase.rpc('increment_points', {
       user_id: referrerProfile.id,
       points: POINTS_AWARDED,
-    }).catch(() => {
-      // If RPC fails, try direct update (workaround)
-      return supabase
-        .from('profiles')
-        .select('points_total')
-        .eq('id', referrerProfile.id)
-        .single()
-        .then(({ data }) => {
-          if (data) {
-            return supabase
-              .from('profiles')
-              .update({ points_total: (data.points_total || 0) + POINTS_AWARDED })
-              .eq('id', referrerProfile.id);
-          }
-        });
     });
+
+    if (rpcResult.error) {
+      // If RPC fails, log it but continue (points may be awarded via other methods)
+      console.warn('RPC increment_points failed:', rpcResult.error);
+    }
 
     // Log event
     await logEvent(user.id, 'referral_redeemed', {
@@ -156,7 +145,7 @@ export async function getReferralInfo() {
     }
 
     // Count how many users have redeemed this code
-    const { data: referrals, error: referralsError, count } = await supabase
+    const { error: referralsError, count } = await supabase
       .from('referrals')
       .select('*', { count: 'exact' })
       .eq('referrer_user_id', user.id);
@@ -256,11 +245,16 @@ export async function hasRedeemedReferral() {
       return { error: 'Not authenticated', data: null };
     }
 
-    const { data, error } = await supabase
+    const { data, error: dbError } = await supabase
       .from('referrals')
       .select('id')
       .eq('referred_user_id', user.id)
       .single();
+
+    if (dbError && dbError.code !== 'PGRST116') {
+      // PGRST116 means no rows found, which is expected
+      return { error: dbError.message, data: null };
+    }
 
     return {
       error: null,

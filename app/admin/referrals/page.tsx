@@ -11,16 +11,16 @@ interface Referral {
   referral_code: string;
   points_awarded: number;
   created_at: string;
-  referrer: {
+  referrer: Array<{
     first_name: string;
     last_initial?: string;
     email: string;
-  };
-  referred: {
+  }>;
+  referred: Array<{
     first_name: string;
     last_initial?: string;
     email: string;
-  };
+  }>;
 }
 
 export default function AdminReferralsPage() {
@@ -122,17 +122,17 @@ export default function AdminReferralsPage() {
                     <td className="px-6 py-4 text-sm text-gray-900">
                       <div>
                         <p className="font-medium">
-                          {referral.referred.first_name} {referral.referred.last_initial || ''}
+                          {referral.referred?.[0]?.first_name} {referral.referred?.[0]?.last_initial || ''}
                         </p>
-                        <p className="text-xs text-gray-500">{referral.referred.email}</p>
+                        <p className="text-xs text-gray-500">{referral.referred?.[0]?.email}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       <div>
                         <p className="font-medium">
-                          {referral.referrer.first_name} {referral.referrer.last_initial || ''}
+                          {referral.referrer?.[0]?.first_name} {referral.referrer?.[0]?.last_initial || ''}
                         </p>
-                        <p className="text-xs text-gray-500">{referral.referrer.email}</p>
+                        <p className="text-xs text-gray-500">{referral.referrer?.[0]?.email}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm">
@@ -171,7 +171,7 @@ export default function AdminReferralsPage() {
             <div className="rounded-lg border border-gray-200 bg-white p-6">
               <p className="text-sm text-gray-600">Unique Referrers</p>
               <p className="text-3xl font-bold text-gray-900">
-                {new Set(referrals.map((r) => r.referrer.email)).size}
+                {new Set(referrals.map((r) => r.referrer?.[0]?.email)).size}
               </p>
             </div>
           </div>

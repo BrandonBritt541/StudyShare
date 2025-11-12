@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { searchListings } from '@/server/actions/listings';
 import { createAlert } from '@/server/actions/alerts';
 import { ListingCard } from '@/components/listings/listing-card';
 import Link from 'next/link';
 
 export default function ListingsPage() {
-  const router = useRouter();
   const [listings, setListings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

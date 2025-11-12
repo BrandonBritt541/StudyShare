@@ -40,7 +40,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabaseBrowser.auth.onAuthStateChanged(async (event, session) => {
+    } = supabaseBrowser.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 

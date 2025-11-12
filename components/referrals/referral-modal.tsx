@@ -64,7 +64,7 @@ export function ReferralModal({ isOpen, onClose }: ReferralModalProps) {
           <>
             <h2 className="mb-2 text-2xl font-bold text-gray-900">Have a referral code?</h2>
             <p className="mb-6 text-gray-600">
-              Enter your friend's 5-digit code to both get rewards!
+              Enter your friend&apos;s 5-digit code to both get rewards!
             </p>
 
             {error && (
@@ -85,7 +85,7 @@ export function ReferralModal({ isOpen, onClose }: ReferralModalProps) {
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 text-center text-lg tracking-widest focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-gray-100"
               />
               <p className="mt-2 text-xs text-gray-500">
-                You can find your friend's code in their Profile.
+                You can find your friend&apos;s code in their Profile.
               </p>
             </div>
 

@@ -79,7 +79,7 @@ export function ReferralCard() {
           </button>
         </div>
         <p className="mt-2 text-xs text-gray-500">
-          Share this code with friends. They'll earn 5 points by using it on signup.
+          Share this code with friends. They&apos;ll earn 5 points by using it on signup.
         </p>
       </div>
 

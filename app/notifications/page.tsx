@@ -154,7 +154,7 @@ export default function NotificationsPage() {
           </div>
         ) : notifications.length === 0 ? (
           <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
-            <p className="mb-4 text-gray-600">You're all caught up! No new notifications.</p>
+            <p className="mb-4 text-gray-600">You&apos;re all caught up! No new notifications.</p>
             <Link
               href="/listings"
               className="inline-block rounded-lg bg-primary-600 px-4 py-2 font-medium text-white hover:bg-primary-700"

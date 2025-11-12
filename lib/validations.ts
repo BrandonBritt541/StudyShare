@@ -42,6 +42,11 @@ export const listingSchema = z.object({
   imageUrls: z.array(z.string().url()).min(1, 'At least 1 image is required').max(6, 'Maximum 6 images allowed'),
 });
 
+// Message Schemas
+export const messageSchema = z.object({
+  body: z.string().min(1, 'Message cannot be empty').max(5000),
+});
+
 // Alert Schemas
 export const alertSchema = z.object({
   queryText: z.string().min(1, 'Search term required').max(200),

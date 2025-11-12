@@ -6,7 +6,7 @@ import { NotificationBell } from './notifications/notification-bell';
 import { MessageBell } from './messaging/message-bell';
 
 export function Header() {
-  const { user, isLoading } = useSession();
+  const { user } = useSession();
 
   return (
     <header className="border-b border-gray-200 bg-white">

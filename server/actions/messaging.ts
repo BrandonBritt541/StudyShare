@@ -3,7 +3,6 @@
 import { supabase } from '@/lib/supabase';
 import { getCurrentUser } from './auth';
 import { filterProfanity } from '@/lib/profanity-filter';
-import { z } from 'zod';
 
 /**
  * Create or get an existing message thread
@@ -334,18 +333,17 @@ export async function getUnreadMessageCount() {
     }
 
     // Count unread messages in threads where user is a participant
-    const { data: count, error } = await supabase
+    const threadIds = (
+      await supabase
+        .from('message_threads')
+        .select('id')
+        .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
+    ).data?.map((t: any) => t.id) || [];
+
+    const { error, count } = await supabase
       .from('messages')
       .select('id', { count: 'exact' })
-      .inFilter(
-        'thread_id',
-        (
-          await supabase
-            .from('message_threads')
-            .select('id')
-            .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
-        ).data?.map((t: any) => t.id) || []
-      )
+      .in('thread_id', threadIds)
       .not('sender_id', 'eq', user.id)
       .eq('is_read', false);
 

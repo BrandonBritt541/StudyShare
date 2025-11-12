@@ -1,7 +1,7 @@
 'use server';
 
 import { supabase } from '@/lib/supabase';
-import { alertSchema, type AlertInput } from '@/lib/validations';
+import { alertSchema } from '@/lib/validations';
 import { getCurrentUser } from './auth';
 import { z } from 'zod';
 
@@ -159,7 +159,7 @@ export async function getNotifications(userId: string) {
  */
 export async function getUnreadNotificationCount(userId: string) {
   try {
-    const { data, error, count } = await supabase
+    const { error, count } = await supabase
       .from('notifications')
       .select('*', { count: 'exact' })
       .eq('user_id', userId)

@@ -15,20 +15,10 @@ interface Message {
   created_at: string;
   is_read: boolean;
   thread_id: string;
-  profiles?: {
+  profiles?: Array<{
     first_name: string;
     last_initial?: string;
-  };
-}
-
-interface ThreadData {
-  thread_id: string;
-  seller_id: string;
-  buyer_id: string;
-  listing_id: string;
-  listing_title: string;
-  seller_name: string;
-  buyer_name: string;
+  }>;
 }
 
 export default function ThreadPage({ params }: { params: { threadId: string } }) {
@@ -36,7 +26,6 @@ export default function ThreadPage({ params }: { params: { threadId: string } })
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [threadData, setThreadData] = useState<ThreadData | null>(null);
   const [showReportMenu, setShowReportMenu] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -129,12 +118,6 @@ export default function ThreadPage({ params }: { params: { threadId: string } })
         </div>
       </div>
     );
-  }
-
-  // Extract thread data from first message
-  if (!threadData && messages.length > 0) {
-    const firstMsg = messages[0] as any;
-    // Note: In production, fetch thread metadata separately
   }
 
   return (
