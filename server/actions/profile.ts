@@ -101,53 +101,30 @@ export async function updateProfile(userId: string, input: Partial<ProfileInput>
 }
 
 /**
- * Get list of majors for dropdown
+ * Get list of active majors from database
+ * Returns empty array if no majors found (client handles empty state)
  */
 export async function getMajors() {
   try {
-    // Common college majors - can be extended or fetched from database
-    const majors = [
-      'Computer Science',
-      'Engineering',
-      'Business',
-      'Economics',
-      'Mathematics',
-      'Physics',
-      'Chemistry',
-      'Biology',
-      'Psychology',
-      'English',
-      'History',
-      'Political Science',
-      'Sociology',
-      'Art',
-      'Music',
-      'Education',
-      'Nursing',
-      'Medicine',
-      'Law',
-      'Architecture',
-      'Environmental Science',
-      'Marine Biology',
-      'Geology',
-      'Astronomy',
-      'Philosophy',
-      'Linguistics',
-      'Communication',
-      'Journalism',
-      'Film',
-      'Dance',
-      'Theater',
-      'Athletics',
-      'Nutrition',
-      'Agriculture',
-      'Forestry',
-      'Other',
-    ].sort();
+    const { data, error } = await supabase
+      .from('majors')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('name', { ascending: true });
 
+    if (error) {
+      return {
+        error: error.message,
+        data: null,
+      };
+    }
+
+    const majorNames = (data || []).map((m) => m.name);
+
+    // Return empty array if no majors found (handled on client)
     return {
       error: null,
-      data: majors,
+      data: majorNames.length > 0 ? majorNames : [],
     };
   } catch (error) {
     return {

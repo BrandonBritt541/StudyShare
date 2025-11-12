@@ -202,3 +202,39 @@ export async function getCurrentUser() {
     return null;
   }
 }
+
+/**
+ * Change user's password
+ */
+export async function changePassword(newPassword: string) {
+  try {
+    if (!newPassword || newPassword.length < 8) {
+      return {
+        error: 'Password must be at least 8 characters',
+        success: false,
+      };
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) {
+      return {
+        error: error.message,
+        success: false,
+      };
+    }
+
+    return {
+      error: null,
+      success: true,
+      message: 'Password changed successfully',
+    };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : 'An error occurred',
+      success: false,
+    };
+  }
+}

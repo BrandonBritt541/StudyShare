@@ -398,6 +398,227 @@ When making changes:
 
 MIT License - See LICENSE file for details
 
+## 🎓 Module 2: Authentication & Profile Management (Module 2 Additions)
+
+### Session Persistence
+
+StudyShare now uses Supabase Auth Helpers with automatic session persistence. Sessions are stored in browser storage and automatically restored on page reload.
+
+**How it works:**
+- Browser client (`lib/supabase-browser.ts`) enables `persistSession: true`
+- `SessionProvider` wraps the app and listens for auth state changes
+- Middleware redirects unauthenticated users to `/login`
+- Sessions automatically refresh when they expire
+
+**If you see "Session expired" errors:**
+1. Clear browser cookies: Open DevTools → Application → Cookies → Delete all studyshare/localhost cookies
+2. Reload the page
+3. Login again
+4. The session should now persist across page reloads
+
+**Testing session persistence:**
+1. Login with `.edu` email
+2. Close the browser tab (don't quit the browser)
+3. Open a new tab and navigate to http://localhost:3000/profile
+4. **Expected:** You should still be logged in (no redirect to /login)
+5. Reload the page
+6. **Expected:** Session persists after reload
+7. Click "Log Out" to clear session
+
+### Managing Majors
+
+Majors are now stored in the database and managed via Admin panel.
+
+**Admin: How to add majors**
+
+1. **Log in as admin** (requires `role='admin'` in profiles table)
+   - Contact database admin to set your role to 'admin'
+   - Or manually update in Supabase:
+     ```sql
+     UPDATE profiles SET role = 'admin' WHERE email = 'your-email@school.edu';
+     ```
+
+2. **Go to Admin Panel:**
+   - Navigate to http://localhost:3000/admin
+   - Click "Majors" card
+
+3. **Add majors via form:**
+   - Type major name: `Data Science`
+   - Click "Add"
+   - Repeat for each major
+
+4. **Or seed dev majors via SQL:**
+   - Go to Supabase Dashboard → SQL Editor
+   - Copy contents of `supabase/seed/dev_insert_majors.sql`
+   - Run the query
+   - ~20 common majors will be inserted
+
+5. **Toggle majors on/off:**
+   - Click "Deactivate" to hide from dropdown
+   - Click "Activate" to show in dropdown
+   - Delete removes the major entirely
+
+6. **Verify majors appear in dropdown:**
+   - Go to `/profile/setup`
+   - Click "Major" dropdown
+   - Should list majors alphabetically
+
+### Changing Passwords
+
+Users can change their password while logged in.
+
+**How to change password:**
+1. Login to your account
+2. Click menu or go to `/profile/settings`
+3. Click "Change Password"
+4. Enter new password (min 8 characters)
+5. Confirm password
+6. Click "Change Password"
+7. **Expected:** Redirects to profile, password updated
+
+### Profile Settings
+
+Users can now edit profile information after signup.
+
+**How to edit profile:**
+1. Login
+2. Go to `/profile/settings` or click "Settings" in profile menu
+3. Edit:
+   - First Name / Last Initial
+   - Major (from dropdown)
+   - College Year
+   - Graduation Year (optional)
+4. Click "Complete Profile Setup"
+5. Changes saved to database
+
+### Logout
+
+Users can now logout securely.
+
+**How to logout:**
+1. Go to `/profile/settings`
+2. Scroll to "Session" section
+3. Click "Log Out"
+4. Confirm logout
+5. **Expected:** Redirected to login page, session cleared
+
+---
+
+## 🧪 Module 2 Testing Checklist
+
+### Test Majors Management
+
+- [ ] Login as admin user
+- [ ] Navigate to http://localhost:3000/admin/majors
+- [ ] Add 5 majors via form (e.g., Data Science, Mechanical Engineering, etc.)
+- [ ] Verify majors appear in table with "Active" status
+- [ ] Create new user account with .edu email
+- [ ] Complete profile setup
+- [ ] In "Major" dropdown, verify 5 majors appear alphabetically
+- [ ] Deactivate one major (e.g., "Data Science")
+- [ ] Create another new account
+- [ ] In dropdown, verify deactivated major is gone
+- [ ] Activate the major again
+- [ ] Verify it reappears in dropdown
+
+### Test Session Persistence
+
+- [ ] Login with valid .edu email (e.g., testuser@calpoly.edu / TestPassword123)
+- [ ] Navigate to `/profile`
+- [ ] **Verify:** You see your profile info (not redirected to login)
+- [ ] Reload the page (Ctrl+R or Cmd+R)
+- [ ] **Verify:** Still logged in, profile still visible
+- [ ] Close this browser tab (not the whole browser)
+- [ ] Open a new tab
+- [ ] Navigate to http://localhost:3000/listings
+- [ ] **Verify:** Still logged in (not redirected to login)
+- [ ] Open DevTools → Application → Cookies
+- [ ] Delete all cookies for localhost
+- [ ] Reload the page
+- [ ] **Verify:** Redirected to login page
+
+### Test Change Password
+
+- [ ] Login with user email (e.g., testuser@calpoly.edu / TestPassword123)
+- [ ] Go to `/profile/settings`
+- [ ] Click "Change Password"
+- [ ] Enter new password: `NewPassword123`
+- [ ] Confirm: `NewPassword123`
+- [ ] Click "Change Password"
+- [ ] **Verify:** Success message shows, redirects to profile
+- [ ] Go to `/profile/settings` again
+- [ ] Click "Log Out"
+- [ ] Login with same email and OLD password (TestPassword123)
+- [ ] **Verify:** "Unauthorized" error (password changed)
+- [ ] Login with new password (NewPassword123)
+- [ ] **Verify:** Login successful
+
+### Test Logout
+
+- [ ] Login with .edu email
+- [ ] Go to `/profile/settings`
+- [ ] Scroll to "Session" section
+- [ ] Click "Log Out"
+- [ ] Confirm logout
+- [ ] **Verify:** Redirected to login page
+- [ ] Navigate to `/listings`
+- [ ] **Verify:** Redirected to login page
+
+---
+
+## 📝 Session Persistence: How It Works
+
+### Technical Details
+
+1. **Browser Client** (`lib/supabase-browser.ts`):
+   ```typescript
+   persistSession: true     // Store auth session in storage
+   autoRefreshToken: true   // Auto-refresh tokens before expiry
+   detectSessionInUrl: true // Detect session from URL (OAuth)
+   ```
+
+2. **SessionProvider** (`lib/session-context.tsx`):
+   - Wraps entire app in RootLayout
+   - Listens to `onAuthStateChanged` events
+   - Provides `useSession()` hook to components
+
+3. **Middleware** (`middleware.ts`):
+   - Redirects `/login` and `/signup` if authenticated
+   - Redirects protected routes (`/listings`, `/profile`, etc.) if not authenticated
+   - Checks for Supabase session cookies
+
+4. **Server Actions**:
+   - Auth actions (`server/actions/auth.ts`) use Supabase server client
+   - Sessions handled by Supabase automatically
+   - Cookies set/cleared by Supabase Auth
+
+### Why Sessions Might Expire
+
+- Supabase JWT expires (usually 1 hour)
+- Browser local storage cleared
+- Cookies deleted
+- Token revoked on server
+- Cross-site request restrictions
+
+### Fixing Session Issues
+
+1. **Session shows as logged out when it shouldn't:**
+   - Clear browser cookies: `Application → Cookies → Delete all`
+   - Clear local storage: `Application → Local Storage → Clear`
+   - Refresh page
+
+2. **Getting redirected to login unexpectedly:**
+   - Check `.env.local` has correct Supabase URL and keys
+   - Check Supabase project is active (not paused)
+   - Check browser allows cookies (enable 3rd party cookies if needed)
+
+3. **Session doesn't persist after page reload:**
+   - Cookies might be blocked; check browser settings
+   - Private/Incognito mode: Use regular browsing mode
+   - Clear site data and try again
+
+---
+
 ## ✉️ Support
 
 For issues and questions:
