@@ -1034,6 +1034,104 @@ First, set up two test users in different browsers:
 
 ---
 
+## 🎁 Module 5: Referrals & Points System
+
+### New Features
+
+- **First-Login Referral Modal** - Shows on profile confirmation after signup
+- **Referral Code Input** - 5-digit numeric code validation
+- **Points Tracking** - Users earn 5 points when someone uses their code
+- **Profile Referral Section** - Display referral code with copy button and points total
+- **Admin Referrals Page** - View all referrals and points awarded
+- **Anti-Abuse Controls** - Prevent self-referrals and multiple redemptions per user
+- **Event Logging** - Track referral_redeemed and points_awarded events
+
+### Quick Local Test (5 minutes)
+
+1. **Create User A (Referrer):**
+   - Sign up: `referrer@calpoly.edu`
+   - Complete profile → redirected to `/profile/confirmation`
+   - Skip referral modal or close it
+   - Go to `/profile/settings`
+   - Copy your referral code (5 digits)
+
+2. **Create User B (New User with Referral):**
+   - Sign up: `newuser@calpoly.edu` (same school)
+   - Complete profile → `/profile/confirmation`
+   - **Verify:** Referral modal appears
+   - Enter User A's code and click "Apply"
+   - **Verify:** Success message, modal closes
+
+3. **Verify Points Awarded:**
+   - Switch to User A's browser
+   - Go to `/profile/settings`
+   - **Verify:** Points Total increased by 5
+   - **Verify:** "Friends Who Joined" shows 1
+
+### Server Actions
+
+- `redeemReferral(code)` - Validate and apply referral code
+- `getReferralInfo()` - Get user's code, points, referral count
+- `getAllReferrals()` - Admin-only list of all referrals
+- `hasRedeemedReferral()` - Check if user already redeemed a code
+
+### RLS & Security
+
+- Users can only see their own referral code
+- Users cannot see who referred them (admin-only)
+- Admin can see all referrals and who referred whom
+- Prevents: self-referrals, duplicate redemptions, cross-school referrals
+
+---
+
+## 🧪 Full Module 5 Testing Checklist: Referrals & Points
+
+### First-Login Modal
+
+- [ ] Create new account, complete profile setup
+- [ ] **Verify:** Referral modal appears on `/profile/confirmation`
+- [ ] Click "Skip for now"
+- [ ] **Verify:** Modal closes, won't show again (check localStorage)
+- [ ] Logout and login
+- [ ] **Verify:** Modal doesn't appear again
+
+### Referral Code Redemption
+
+- [ ] **User A:** Copy referral code from `/profile/settings`
+- [ ] **User B:** New account, see modal after profile setup
+- [ ] Enter User A's code
+- [ ] Click "Apply"
+- [ ] **Verify:** Success: "Thank you! Your referral code has been applied."
+- [ ] Switch to User A
+- [ ] Go to `/profile/settings`
+- [ ] **Verify:** Points increased by 5
+- [ ] **Verify:** "Friends Who Joined" shows 1
+
+### Code Validation
+
+- [ ] Try 3 digits → "Apply" button disabled
+- [ ] Type letters → auto-strips to digits only
+- [ ] Enter invalid code "99999" → Error: "Referral code not found"
+- [ ] Enter too long string → truncates to 5 digits
+
+### Anti-Abuse
+
+- [ ] Try self-referral with own code → "Cannot use your own referral code"
+- [ ] User B tries to redeem again → "You have already redeemed a referral code"
+- [ ] Different school user tries → "Referrer must be from your school"
+
+### Admin Page
+
+- [ ] Login as admin
+- [ ] Visit `/admin/referrals`
+- [ ] **Verify:** Table shows all referrals (Referred User, Referrer, Code, Points, Date)
+- [ ] **Verify:** Stats show Total Referrals, Total Points, Unique Referrers
+- [ ] Login as regular user
+- [ ] Try `/admin/referrals`
+- [ ] **Verify:** Unauthorized error (RLS blocks)
+
+---
+
 ## 🗺️ MVP Checklist
 
 - [x] Email/password signup (only .edu emails accepted)
@@ -1042,7 +1140,7 @@ First, set up two test users in different browsers:
 - [x] Create, search, view listings (Module 3)
 - [x] In-app messaging between buyer and seller (Module 4)
 - [x] Notify-Me bell (14-day expiry, in-app notifications) (Module 3)
-- [ ] Referral codes (auto-generate, points increment)
+- [x] Referral codes (auto-generate, points increment) (Module 5)
 - [ ] Schedule image uploads
 - [x] All content scoped to user's school
 - [x] CI/CD + Supabase migrations functional

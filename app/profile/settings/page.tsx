@@ -6,6 +6,7 @@ import { getCurrentUser } from '@/server/actions/auth';
 import { getUserProfile, updateProfile } from '@/server/actions/profile';
 import { LogoutButton } from '@/components/auth/logout-button';
 import { ProfileSetupForm } from '@/components/profile/profile-setup-form';
+import { ReferralCard } from '@/components/referrals/referral-card';
 import Link from 'next/link';
 
 export default function ProfileSettingsPage() {
@@ -88,6 +89,9 @@ export default function ProfileSettingsPage() {
             <h2 className="mb-6 text-xl font-semibold text-gray-900">Edit Profile Information</h2>
             <ProfileSetupForm userId={userId} />
           </div>
+
+          {/* Referrals & Points Section */}
+          <ReferralCard />
 
           {/* Security Section */}
           <div className="rounded-lg border border-gray-200 bg-white p-8">
