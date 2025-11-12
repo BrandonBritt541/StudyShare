@@ -31,7 +31,7 @@ export default function AdminPage() {
           </Link>
 
           <Link
-            href="/admin/analytics"
+            href="/admin/overview"
             className="rounded-lg border border-gray-200 bg-white p-6 hover:border-primary-300 hover:shadow-md"
           >
             <h3 className="font-semibold text-gray-900">Analytics</h3>
@@ -52,6 +52,22 @@ export default function AdminPage() {
           >
             <h3 className="font-semibold text-gray-900">Majors</h3>
             <p className="text-gray-600">Add and manage college majors</p>
+          </Link>
+
+          <Link
+            href="/admin/courses"
+            className="rounded-lg border border-gray-200 bg-white p-6 hover:border-primary-300 hover:shadow-md"
+          >
+            <h3 className="font-semibold text-gray-900">Courses</h3>
+            <p className="text-gray-600">Manage courses and materials</p>
+          </Link>
+
+          <Link
+            href="/admin/referrals"
+            className="rounded-lg border border-gray-200 bg-white p-6 hover:border-primary-300 hover:shadow-md"
+          >
+            <h3 className="font-semibold text-gray-900">Referrals</h3>
+            <p className="text-gray-600">View referral activity</p>
           </Link>
         </div>
       </div>

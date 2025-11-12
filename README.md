@@ -1132,6 +1132,287 @@ First, set up two test users in different browsers:
 
 ---
 
+---
+
+## 📚 Module 6A: Class Schedules (Image Uploads Only)
+
+### New Features
+
+- **Schedule Image Uploads** - Upload 1-10 images per entry (JPG/PNG/WEBP, ≤5MB)
+- **Schedule Grid** - Browse all uploaded schedules with timestamps
+- **Delete Schedules** - Remove individual schedule entries
+- **Supabase Storage** - Images stored in `schedules` bucket with RLS
+- **Event Logging** - Track schedule_images_uploaded and schedule_deleted events
+- **RLS Protection** - Users see only their own schedules
+
+### Quick Local Test (5 minutes)
+
+1. **Upload Schedules:**
+   - Login as User A
+   - Navigate to `/profile/schedules`
+   - Drag & drop 2-3 schedule images (or click to browse)
+   - **Verify:** Progress bars appear per file
+   - **Verify:** Images appear in grid after upload
+
+2. **Verify Persistence:**
+   - Refresh page (F5)
+   - **Verify:** Uploaded schedules still visible in grid
+   - **Verify:** Timestamps shown (e.g., "2 minutes ago")
+
+3. **Delete Schedule:**
+   - Click "Delete" button on a schedule entry
+   - Confirm deletion in modal
+   - **Verify:** Entry removed from grid
+   - **Verify:** Removed from Supabase Storage (check dashboard)
+
+4. **RLS & Privacy:**
+   - Login as User B (different account, same school)
+   - Try to access `/profile/schedules`
+   - **Verify:** User B sees empty grid (only their own schedules)
+   - **Verify:** Cannot see User A's schedules
+
+### Server Actions
+
+- `uploadScheduleImages(files)` - Upload 1-10 images, create user_schedules entry
+- `getScheduleImages()` - Fetch all user's schedule uploads
+- `deleteScheduleEntry(scheduleId)` - Delete entry and remove images from storage
+- `getScheduleImageCount(userId)` - Count uploads for analytics
+
+### RLS & Security
+
+- **User_schedules table:** Only owner can read/write/delete
+- **Storage bucket:** Path-based isolation by user_id (e.g., `schedules/uuid/filename`)
+- **File validation:** JPG/PNG/WEBP only, ≤5MB per file
+- **Maximum:** 1-10 images per upload session
+
+---
+
+### 🧪 Full Module 6A Testing Checklist: Class Schedules
+
+- [ ] **Upload multiple images** → Click `/profile/schedules` → Drag-drop 3 PNG files
+- [ ] **Verify:** Progress bars show for each file
+- [ ] **Verify:** All files upload successfully
+- [ ] **Verify:** Images appear in grid with primary image visible + thumbnails for others
+- [ ] **Verify:** Timestamps shown (e.g., "just now", "5 minutes ago")
+- [ ] **Refresh page** (F5)
+- [ ] **Verify:** Schedules still visible, not lost on reload
+- [ ] **Upload single WEBP image** → Drag one WEBP file
+- [ ] **Verify:** Uploads successfully (format validation working)
+- [ ] **Try invalid format** → Drag a PDF file
+- [ ] **Verify:** Error: "Only JPG, PNG, and WEBP files are allowed"
+- [ ] **Try oversized file** → Create 6MB JPG image (or use tool)
+- [ ] **Verify:** Error: "Files must be 5MB or smaller"
+- [ ] **Try >10 files** → Select 15 JPG files
+- [ ] **Verify:** Error: "Maximum 10 images per upload"
+- [ ] **Delete one schedule** → Click "Delete" on first entry
+- [ ] **Verify:** Confirmation modal appears
+- [ ] **Verify:** After confirming, entry removed from UI
+- [ ] **Verify:** Entry removed from Supabase Storage (check `supabase_storage.objects` table)
+- [ ] **Create User B** (different account, same school)
+- [ ] **User B visits** `/profile/schedules`
+- [ ] **Verify:** Empty grid (only sees own schedules, not User A's)
+- [ ] **User B uploads own schedules**
+- [ ] **Switch back to User A**
+- [ ] **Verify:** User A still doesn't see User B's schedules
+- [ ] **Check event logging** → Go to Supabase SQL Editor
+- [ ] Run: `SELECT * FROM events WHERE event_type IN ('schedule_images_uploaded', 'schedule_deleted');`
+- [ ] **Verify:** Rows exist for uploads and deletes with user_id and data
+
+---
+
+## 🎓 Module 6B: Admin › Courses & Materials
+
+### New Features
+
+- **Course CRUD** - Create, read, update, delete courses (admin only)
+- **Professor Names** - Store multiple professor names per course
+- **Common Materials** - Track typical materials (textbooks, lab manuals, etc.)
+- **School Scoping** - Courses visible only to students at same school
+- **Admin Form** - Inline editing with professor/material arrays
+- **Event Logging** - Track course_created, course_updated, course_deleted
+
+### Quick Local Test (5 minutes)
+
+1. **Create Course (as Admin):**
+   - Login as admin account
+   - Navigate to `/admin/courses`
+   - Click "+ New Course"
+   - Fill: Code "CS 101", Name "Intro to Computer Science"
+   - Add professors: "Dr. Smith", "Prof. Jones"
+   - Add materials: "Introduction to Algorithms", "Lab Manual"
+   - Click "Create Course"
+   - **Verify:** Course appears in table
+
+2. **Verify Student Access:**
+   - Login as regular user
+   - Search for course in listings form → "CS 101" should autocomplete
+   - **Verify:** Students can see courses when creating listings
+   - **Verify:** Students cannot access `/admin/courses` (redirects or 401)
+
+3. **Edit & Delete:**
+   - Logout and login as admin
+   - Go to `/admin/courses`
+   - Click "Edit" on CS 101
+   - Change name to "Intro to CS (Updated)"
+   - Click "Update Course"
+   - **Verify:** Table reflects change
+   - Click "Delete" on a course
+   - Confirm deletion
+   - **Verify:** Removed from table
+
+### Server Actions
+
+- `createCourse(data)` - Create new course (admin only)
+- `updateCourse(courseId, data)` - Update course details
+- `deleteCourse(courseId)` - Remove course
+- `getCourses()` - Fetch all courses for user's school
+- `searchCourses(query)` - Search by code or name
+- `getCourseById(courseId)` - Get single course details
+
+### RLS & Security
+
+- **Students:** Can read courses from their school
+- **Admins:** Can create, update, delete courses
+- **Validation:** Code and name required; professors/materials validated as strings
+
+---
+
+### 🧪 Full Module 6B Testing Checklist: Courses
+
+- [ ] **Login as admin** → Visit `/admin/courses`
+- [ ] **Verify:** Page loads with empty courses table
+- [ ] **Click "+ New Course"**
+- [ ] **Fill form:**
+  - Code: "MATH 201"
+  - Name: "Calculus II"
+  - Add professor: "Prof. Johnson"
+  - Add professor: "Dr. Lee" (second professor)
+  - Add material: "Calculus Textbook (8th ed)"
+  - Add material: "Problem Set Solutions"
+- [ ] **Click "Create Course"**
+- [ ] **Verify:** Success, course appears in table
+- [ ] **Verify:** Code "MATH 201" visible in monospace font
+- [ ] **Verify:** Professors show first 2, "+1 more" if >2
+- [ ] **Verify:** Materials show similarly
+- [ ] **Create second course:**
+  - Code: "CS 101"
+  - Name: "Computer Science I"
+  - Professors: "Dr. Smith"
+  - Materials: "Programming Textbook", "IDE Setup Guide"
+- [ ] **Click "Edit" on MATH 201**
+- [ ] **Verify:** Form pre-populates with existing data
+- [ ] **Change name** to "Calculus II - Spring 2024"
+- [ ] **Add professor:** "Dr. Williams"
+- [ ] **Click "Update Course"**
+- [ ] **Verify:** Table reflects changes
+- [ ] **Click "Delete" on CS 101**
+- [ ] **Verify:** Confirmation modal appears
+- [ ] **Click "Delete"** in modal
+- [ ] **Verify:** Course removed from table
+- [ ] **Login as regular student**
+- [ ] **Try to access** `/admin/courses` directly
+- [ ] **Verify:** Redirected to `/` or shows unauthorized error
+- [ ] **Create a new listing** and see if courses appear in dropdown/search
+- [ ] **Verify:** "MATH 201" and remaining course appear as options
+- [ ] **Check event logging** → Supabase SQL Editor
+- [ ] Run: `SELECT * FROM events WHERE event_type LIKE 'course_%';`
+- [ ] **Verify:** Rows for course_created, course_updated, course_deleted
+
+---
+
+## 📊 Module 7: Admin › Overview (Analytics Dashboard)
+
+### New Features
+
+- **7-Day & 30-Day Windows** - Toggle between time periods
+- **User Analytics** - Total users, new users in period
+- **Listing Analytics** - Active listings, new, sold
+- **Message Analytics** - Messages sent, active threads
+- **Alert Analytics** - Created, matched to listings
+- **Referral Analytics** - Redemptions, points awarded, unique referrers
+- **Schedule Analytics** - Uploads in period, total all-time
+- **Stat Cards** - Visual cards with emojis for each metric
+- **Event-Driven** - Data computed from existing tables
+
+### Quick Local Test (5 minutes)
+
+1. **View Analytics:**
+   - Login as admin
+   - Navigate to `/admin/overview`
+   - **Verify:** Page shows stat cards for all categories
+   - **Verify:** "Last 7 Days" button active by default
+
+2. **Switch Time Window:**
+   - Click "Last 30 Days"
+   - **Verify:** Page reloads with updated stats
+   - Numbers may differ (larger window = more activity)
+
+3. **Data Accuracy:**
+   - Create a listing
+   - Return to analytics page
+   - **Verify:** "New Listings (7d)" increments by 1
+   - Send a message between buyer and seller
+   - **Verify:** "Messages Sent (7d)" increments
+
+### Server Actions
+
+- `getAnalyticsData(timeWindow)` - Fetch all metrics for 7d or 30d
+  - Returns: users (total, new), listings (active, new, sold), messages (sent, active threads), alerts (created, matched), referrals (redeemed, points, unique referrers), schedules (uploaded, total)
+
+### Queries & Indexes
+
+- Indexes on `created_at`, `status`, `school_id` for fast aggregation
+- Counts use exact mode to ensure accuracy
+- Time window filtering via `gte(created_at, cutoffDate)`
+
+---
+
+### 🧪 Full Module 7 Testing Checklist: Analytics
+
+- [ ] **Login as admin** → Visit `/admin/overview`
+- [ ] **Verify:** Page loads with stat cards for:
+  - Users (Total Users, New Users 7d)
+  - Listings (Active, New 7d, Sold)
+  - Messages (Sent 7d, Active Threads 7d)
+  - Alerts (Created 7d, Matched 7d)
+  - Referrals (Redeemed 7d, Points Awarded 7d, Unique Referrers 7d)
+  - Schedules (Uploaded 7d, Total Uploads)
+- [ ] **Verify:** All stat cards display numbers and icons
+- [ ] **Verify:** Icons are emojis (👥, 📦, 💬, etc.)
+- [ ] **Click "Last 30 Days" button**
+- [ ] **Verify:** Button styling changes (primary color)
+- [ ] **Verify:** Numbers update (typically higher for 30d window)
+- [ ] **Click "Last 7 Days"** to switch back
+- [ ] **Perform actions** in different browser windows:
+  - **Window 1 (Admin):** Keep overview page open
+  - **Window 2:** Create a new listing
+  - **Window 3:** Send a message in an existing thread
+- [ ] **Refresh overview page** in Window 1
+- [ ] **Verify:**
+  - "New Listings (7d)" increased by 1
+  - "Messages Sent (7d)" increased by 1
+  - "Active Threads (7d)" updated
+- [ ] **Check cross-school isolation:**
+  - Create second school admin
+  - Login and visit `/admin/overview`
+  - **Verify:** Admins see stats only for their own school (different numbers)
+- [ ] **Login as regular user**
+- [ ] **Try to access** `/admin/overview`
+- [ ] **Verify:** Redirected (not admin) or error page shown
+- [ ] **Create multiple referrals** (using Module 5 referral codes):
+  - **User A creates account** (referrer)
+  - **User B uses User A's code** (referred)
+  - **User C uses User A's code** (referred)
+  - **Return to admin analytics**
+  - **Verify:** "Referrals Redeemed (7d)" shows 2 (Users B and C)
+  - **Verify:** "Unique Referrers (7d)" shows 1 (only User A)
+  - **Verify:** "Points Awarded 7d" shows 10 (5 points × 2 referrals)
+- [ ] **Check event table** → Supabase SQL Editor
+- [ ] Run: `SELECT event_type, COUNT(*) FROM events WHERE created_at >= NOW() - INTERVAL '7 days' GROUP BY event_type;`
+- [ ] **Verify:** All event types are represented (signup, listing_created, message_sent, alert_created, schedule_images_uploaded, etc.)
+
+---
+
 ## 🗺️ MVP Checklist
 
 - [x] Email/password signup (only .edu emails accepted)
@@ -1141,6 +1422,8 @@ First, set up two test users in different browsers:
 - [x] In-app messaging between buyer and seller (Module 4)
 - [x] Notify-Me bell (14-day expiry, in-app notifications) (Module 3)
 - [x] Referral codes (auto-generate, points increment) (Module 5)
-- [ ] Schedule image uploads
+- [x] Schedule image uploads (Module 6A)
+- [x] Admin courses management (Module 6B)
+- [x] Analytics dashboard (Module 7)
 - [x] All content scoped to user's school
 - [x] CI/CD + Supabase migrations functional
