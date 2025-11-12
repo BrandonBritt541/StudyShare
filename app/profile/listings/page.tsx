@@ -1,0 +1,12 @@
+export default function MyListingsPage() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-4xl px-6 py-12">
+        <h1 className="mb-8 text-3xl font-bold text-gray-900">My Listings</h1>
+        <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
+          <p className="text-gray-600">Your listings will appear here...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
