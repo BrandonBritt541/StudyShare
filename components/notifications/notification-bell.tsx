@@ -8,18 +8,15 @@ import { getUnreadNotificationCount } from '@/server/actions/alerts';
 export function NotificationBell() {
   const { user, isLoading } = useSession();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
     if (isLoading || !user) return;
 
     const fetchUnreadCount = async () => {
-      setIsFetching(true);
       const result = await getUnreadNotificationCount(user.id);
       if (!result.error && result.data !== null) {
         setUnreadCount(result.data);
       }
-      setIsFetching(false);
     };
 
     fetchUnreadCount();

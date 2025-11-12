@@ -10,20 +10,26 @@ export function useRealtimeMessages(
   useEffect(() => {
     if (!threadId) return;
 
-    // Subscribe to new messages in this thread
-    const subscription = supabase
-      .from(`messages:thread_id=eq.${threadId}`)
-      .on('INSERT', (payload) => {
+    // Subscribe to new messages in this thread using realtime channel
+    const channel = supabase.channel(`messages:${threadId}`).on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `thread_id=eq.${threadId}`,
+      },
+      (payload: any) => {
         onNewMessage(payload.new);
-      })
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Subscribed to messages:', threadId);
-        }
-      });
+      }
+    ).subscribe((status: string) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('Subscribed to messages:', threadId);
+      }
+    });
 
     return () => {
-      subscription.unsubscribe();
+      channel.unsubscribe();
     };
   }, [threadId, onNewMessage]);
 }

@@ -9,10 +9,10 @@ interface MessageBubbleProps {
     sender_id: string;
     created_at: string;
     is_read: boolean;
-    profiles?: {
+    profiles?: Array<{
       first_name: string;
       last_initial?: string;
-    };
+    }>;
   };
   isCurrentUser: boolean;
 }
@@ -23,9 +23,9 @@ export function MessageBubble({ message, isCurrentUser }: MessageBubbleProps) {
   return (
     <div className={`flex gap-3 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
       {/* Avatar for other user */}
-      {!isCurrentUser && message.profiles && (
+      {!isCurrentUser && message.profiles?.[0] && (
         <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-300 text-sm font-semibold text-gray-700">
-          {message.profiles.first_name?.[0]?.toUpperCase()}
+          {message.profiles[0].first_name?.[0]?.toUpperCase()}
         </div>
       )}
 

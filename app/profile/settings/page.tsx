@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser } from '@/server/actions/auth';
-import { getUserProfile, updateProfile } from '@/server/actions/profile';
 import { LogoutButton } from '@/components/auth/logout-button';
 import { ProfileSetupForm } from '@/components/profile/profile-setup-form';
 import { ReferralCard } from '@/components/referrals/referral-card';

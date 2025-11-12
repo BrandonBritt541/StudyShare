@@ -8,18 +8,15 @@ import { getUnreadMessageCount } from '@/server/actions/messaging';
 export function MessageBell() {
   const { user, isLoading } = useSession();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
     if (isLoading || !user) return;
 
     const fetchUnreadCount = async () => {
-      setIsFetching(true);
       const result = await getUnreadMessageCount();
       if (!result.error && result.data !== null) {
         setUnreadCount(result.data);
       }
-      setIsFetching(false);
     };
 
     fetchUnreadCount();

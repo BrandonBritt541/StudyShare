@@ -88,7 +88,7 @@ export default function AlertsPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Notify-Me Alerts</h1>
           <p className="text-gray-600">
-            Manage your search alerts. You'll be notified when new listings match your search.
+            Manage your search alerts. You&apos;ll be notified when new listings match your search.
           </p>
         </div>
 
@@ -102,9 +102,9 @@ export default function AlertsPage() {
           </div>
         ) : alerts.length === 0 ? (
           <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
-            <p className="mb-4 text-gray-600">You don't have any active alerts yet.</p>
+            <p className="mb-4 text-gray-600">You don&apos;t have any active alerts yet.</p>
             <p className="mb-6 text-sm text-gray-500">
-              Go to Browse Listings and use the "Notify Me" button when you don't find what you're
+              Go to Browse Listings and use the &quot;Notify Me&quot; button when you don&apos;t find what you&apos;re
               looking for.
             </p>
             <Link
@@ -125,7 +125,7 @@ export default function AlertsPage() {
                   {/* Alert Details */}
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2 break-words">
-                      "{alert.query_text}"
+                      &quot;{alert.query_text}&quot;
                     </h3>
                     <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                       <div>
