@@ -126,11 +126,8 @@ export function CourseTable({ courses, onEdit, onDelete }: CourseTableProps) {
           courseId={selectedCourse}
           isOpen={selectedCourse !== null}
           isLoading={isDeleting}
-          onConfirm={async () => {
-            setIsDeleting(true);
-            handleDeleteComplete();
-          }}
           onCancel={() => setSelectedCourse(null)}
+          onComplete={() => handleDeleteComplete()}
         />
       )}
     </>

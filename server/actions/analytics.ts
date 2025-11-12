@@ -51,12 +51,16 @@ export async function getAnalyticsData(
     }
 
     // Get user profile and check role
-    const profile = await getUserProfile(user.id);
-    if (!profile || !['admin', 'moderator'].includes(profile.role || '')) {
+    const profileResult = await getUserProfile(user.id);
+    if (profileResult.error || !profileResult.data || !profileResult.data.role || !['admin', 'moderator'].includes(profileResult.data.role)) {
       return { error: 'Only admins can view analytics' };
     }
 
-    const schoolId = profile.school_id;
+    if (!profileResult.data.school_id) {
+      return { error: 'User school not found' };
+    }
+
+    const schoolId = profileResult.data.school_id;
     const daysAgo = timeWindow === '7d' ? 7 : 30;
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysAgo);

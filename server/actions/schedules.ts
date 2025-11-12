@@ -34,10 +34,11 @@ export async function uploadScheduleImages(
     }
 
     // Get user profile for school_id
-    const profile = await getUserProfile(user.id);
-    if (!profile) {
+    const profileResult = await getUserProfile(user.id);
+    if (profileResult.error || !profileResult.data || !profileResult.data.school_id) {
       return { success: false, error: 'User profile not found' };
     }
+    const profile = profileResult.data;
 
     // Validate file count
     if (files.length === 0 || files.length > 10) {

@@ -7,7 +7,6 @@ interface CourseDeleteModalProps {
   courseId: string;
   isOpen: boolean;
   isLoading: boolean;
-  onConfirm?: () => void;
   onCancel: () => void;
   onComplete?: () => void;
 }
@@ -16,7 +15,6 @@ export function CourseDeleteModal({
   courseId,
   isOpen,
   isLoading: initialLoading,
-  onConfirm,
   onCancel,
   onComplete,
 }: CourseDeleteModalProps) {

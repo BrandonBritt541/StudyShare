@@ -9,8 +9,7 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
  */
 export async function uploadScheduleImage(
   file: File,
-  userId: string,
-  onProgress?: (progress: number) => void
+  userId: string
 ): Promise<{ url: string | null; error: string | null }> {
   try {
     // Validate file

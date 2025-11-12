@@ -37,10 +37,11 @@ export async function createCourse(data: {
     }
 
     // Get user profile and check role
-    const profile = await getUserProfile(user.id);
-    if (!profile || !['admin', 'moderator'].includes(profile.role || '')) {
+    const profileResult = await getUserProfile(user.id);
+    if (profileResult.error || !profileResult.data || !profileResult.data.role || !['admin', 'moderator'].includes(profileResult.data.role)) {
       return { success: false, error: 'Only admins can create courses' };
     }
+    const profile = profileResult.data;
 
     // Validate input
     if (!data.code || !data.name) {
@@ -123,10 +124,11 @@ export async function updateCourse(
     }
 
     // Get user profile and check role
-    const profile = await getUserProfile(user.id);
-    if (!profile || !['admin', 'moderator'].includes(profile.role || '')) {
+    const profileResult = await getUserProfile(user.id);
+    if (profileResult.error || !profileResult.data || !profileResult.data.role || !['admin', 'moderator'].includes(profileResult.data.role)) {
       return { success: false, error: 'Only admins can update courses' };
     }
+    const profile = profileResult.data;
 
     // Build update object
     const updateData: any = {};
@@ -206,10 +208,11 @@ export async function deleteCourse(courseId: string): Promise<{
     }
 
     // Get user profile and check role
-    const profile = await getUserProfile(user.id);
-    if (!profile || !['admin', 'moderator'].includes(profile.role || '')) {
+    const profileResult = await getUserProfile(user.id);
+    if (profileResult.error || !profileResult.data || !profileResult.data.role || !['admin', 'moderator'].includes(profileResult.data.role)) {
       return { success: false, error: 'Only admins can delete courses' };
     }
+    const profile = profileResult.data;
 
     // Delete course
     const { error } = await supabase
@@ -249,10 +252,11 @@ export async function getCourses(): Promise<{
       return { error: 'Not authenticated' };
     }
 
-    const profile = await getUserProfile(user.id);
-    if (!profile) {
+    const profileResult = await getUserProfile(user.id);
+    if (profileResult.error || !profileResult.data || !profileResult.data.school_id) {
       return { error: 'User profile not found' };
     }
+    const profile = profileResult.data;
 
     const { data, error } = await supabase
       .from('courses')
@@ -300,10 +304,11 @@ export async function searchCourses(query: string): Promise<{
       return { error: 'Not authenticated' };
     }
 
-    const profile = await getUserProfile(user.id);
-    if (!profile) {
+    const profileResult = await getUserProfile(user.id);
+    if (profileResult.error || !profileResult.data || !profileResult.data.school_id) {
       return { error: 'User profile not found' };
     }
+    const profile = profileResult.data;
 
     const searchTerm = `%${query.trim()}%`;
 
@@ -351,10 +356,11 @@ export async function getCourseById(courseId: string): Promise<{
       return { error: 'Not authenticated' };
     }
 
-    const profile = await getUserProfile(user.id);
-    if (!profile) {
+    const profileResult = await getUserProfile(user.id);
+    if (profileResult.error || !profileResult.data || !profileResult.data.school_id) {
       return { error: 'User profile not found' };
     }
+    const profile = profileResult.data;
 
     const { data, error } = await supabase
       .from('courses')

@@ -32,9 +32,9 @@ export default function AdminCoursesPage() {
         }
 
         // Get user profile and check role
-        const profile = await getUserProfile(user.id);
+        const profileResult = await getUserProfile(user.id);
 
-        if (!profile || !['admin', 'moderator'].includes(profile.role || '')) {
+        if (profileResult.error || !profileResult.data || !profileResult.data.role || !['admin', 'moderator'].includes(profileResult.data.role)) {
           router.push('/');
           return;
         }
